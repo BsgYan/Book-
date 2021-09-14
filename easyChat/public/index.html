@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    姓名：<input type="text" id="name">
+    <button id="setname">加入聊天室</button><br>
+
+    输入消息：<input type="text" id="text">
+    <button id="button" type="button">发送消息</button>
+
+    <div id="container">
+    </div>
+
+
+    <script>
+        let ws=null;
+        document.getElementById('setname').onclick=function(){
+            let name=document.getElementById('name').value;
+            if(name==='') return
+            ws=new WebSocket('ws://localhost:2333');
+
+            //连接成功发送消息
+            ws.onopen=function(){
+                ws.send(JSON.stringify({
+                    name,
+                    type:'setname'
+                }));
+            }
+
+            //发送消息
+            document.getElementById('button').onclick=()=>{
+                ws.send(JSON.stringify({
+                    text:document.getElementById('text').value,
+                    type:'chat'
+                }));
+            }
+            
+            //接收服务器消息
+            ws.onmessage=function(e){
+                document.getElementById('container').appendChild(createChatPanel(JSON.parse(e.data)));
+            }
+
+            //点击之后让按钮失效
+            document.getElementById('setname').setAttribute('disabled',true);
+        }
+        
+        //创建消息组件
+        function createChatPanel(data){
+            let {name,text} = data;
+
+            let div=document.createElement('div');
+            let span1=document.createElement('span');
+            let span2=document.createElement('span');
+
+            span1.innerHTML=name+' '+(new Date()).toString().slice(15,24);
+            span2.innerHTML=text;
+
+            span1.style.color='grey';
+
+            div.appendChild(span1);
+            div.appendChild(document.createElement('br'));
+            div.appendChild(span2);
+            
+            return div;
+        }
+       
+    </script>
+</body>
+</html>
+
+<!-- ws.open       WebSocketServer连接成功后，会触发onopen消息 -->
+<!-- ws.send       向服务端发送消息 -->
+<!-- ws.onmessage  接收服务端发送的消息 -->
